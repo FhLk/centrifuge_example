@@ -75,7 +75,7 @@
   </div>
 
   <!-- JS client ของ Centrifugo จาก CDN -->
-  <script src="https://unpkg.com/centrifuge@5.0.0/dist/centrifuge.js"></script>
+  <script src="https://unpkg.com/centrifuge@<version>/dist/centrifuge.js"></script>
 
   <script>
     // URL ของ Centrifugo (ตาม config ปัจจุบันของคุณ)
@@ -121,7 +121,7 @@
       addMessage("🚀 Connecting to " + WS_URL);
 
       centrifuge = new Centrifuge(WS_URL, {
-      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXB0X2lkIjoiIiwiZW1zIjoiRU1TLTY4ODMtNjAxNjExIiwiZW52IjoiZGV2IiwiZXhwIjoxNzY1OTQxOTI3LCJvbmVfaWQiOiI4Mzg5ODM3NjU4OTMwNDM2IiwicmVmX2lkIjoiZjc4MzQwOWMtN2RjOC00YzQwLTliOGItYWY5ZTNkZDFjZDM2Iiwicm9sZV9pZCI6IjgzMTYxMTA5MTAiLCJzdWIiOiJlbXAtRU1TLTY4ODMtNjAxNjExIiwidHlwZSI6ImFjY2VzcyJ9.tF_PcuW-DIahYSw54fxhWCafjYzoNaWNd1YiuweAMUI"
+      token : "<access_token>"
       });
 
       // Event: เมื่อเชื่อมต่อสำเร็จ
