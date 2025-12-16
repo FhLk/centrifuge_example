@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>Centrifugo Realtime Notification Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      font-size: 20px;
+    }
+    .status {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      background: #fff;
+      border: 1px solid #ddd;
+    }
+    .status span {
+      font-weight: bold;
+    }
+    #messages {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+      background: #fff;
+      border: 1px solid #ddd;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    .msg-item {
+      padding: 6px 8px;
+      margin-bottom: 6px;
+      border-radius: 4px;
+      background: #eaf4ff;
+    }
+    .msg-time {
+      font-size: 11px;
+      color: #666;
+    }
+    .msg-data {
+      margin-top: 2px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .controls {
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔔 Centrifugo Realtime Notification Test</h1>
+
+  <div class="controls">
+    <button id="btnConnect">Connect</button>
+    <button id="btnDisconnect">Disconnect</button>
+  </div>
+
+  <div class="status">
+    สถานะการเชื่อมต่อ: <span id="statusText">DISCONNECTED</span><br />
+    Channel ที่ subscribe: <code>announcement:global</code>
+  </div>
+
+  <div id="messages">
+    <!-- ข้อความ realtime จะแสดงตรงนี้ -->
+  </div>
+
+  <!-- JS client ของ Centrifugo จาก CDN -->
+  <script src="https://unpkg.com/centrifuge@5.0.0/dist/centrifuge.js"></script>
+
+  <script>
+    // URL ของ Centrifugo (ตาม config ปัจจุบันของคุณ)
+    const WS_URL = "ws://172.30.0.1:30850/connection/websocket";
+    const CHANNEL = "test";
+
+    let centrifuge = null;
+    let subscription = null;
+
+    const statusText = document.getElementById("statusText");
+    const messagesDiv = document.getElementById("messages");
+    const btnConnect = document.getElementById("btnConnect");
+    const btnDisconnect = document.getElementById("btnDisconnect");
+
+    function addMessage(text, data) {
+      const item = document.createElement("div");
+      item.className = "msg-item";
+
+      const now = new Date();
+      const time = document.createElement("div");
+      time.className = "msg-time";
+      time.textContent = now.toLocaleString();
+
+      const body = document.createElement("div");
+      body.className = "msg-data";
+      if (data !== undefined) {
+        body.textContent = text + " " + JSON.stringify(data, null, 2);
+      } else {
+        body.textContent = text;
+      }
+
+      item.appendChild(time);
+      item.appendChild(body);
+      messagesDiv.prepend(item);
+    }
+
+    function connect() {
+      if (centrifuge) {
+        addMessage("⚠️ Already connected or connecting...");
+        return;
+      }
+
+      addMessage("🚀 Connecting to " + WS_URL);
+
+      centrifuge = new Centrifuge(WS_URL, {
+      token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXB0X2lkIjoiIiwiZW1zIjoiRU1TLTY4ODMtNjAxNjExIiwiZW52IjoiZGV2IiwiZXhwIjoxNzY1OTQxOTI3LCJvbmVfaWQiOiI4Mzg5ODM3NjU4OTMwNDM2IiwicmVmX2lkIjoiZjc4MzQwOWMtN2RjOC00YzQwLTliOGItYWY5ZTNkZDFjZDM2Iiwicm9sZV9pZCI6IjgzMTYxMTA5MTAiLCJzdWIiOiJlbXAtRU1TLTY4ODMtNjAxNjExIiwidHlwZSI6ImFjY2VzcyJ9.tF_PcuW-DIahYSw54fxhWCafjYzoNaWNd1YiuweAMUI"
+      });
+
+      // Event: เมื่อเชื่อมต่อสำเร็จ
+      centrifuge.on('connected', function(ctx) {
+        console.log("wow");
+        statusText.textContent = "CONNECTED (clientID=" + ctx.client + ")";
+        addMessage("✅ Connected", ctx);
+      });
+
+      // Event: เมื่อหลุดการเชื่อมต่อ
+      centrifuge.on('disconnect', function(ctx) {
+        statusText.textContent = "DISCONNECTED (" + ctx.reason + ")";
+        addMessage("❌ Disconnected", ctx);
+      });
+
+      // subscribe channel announcement:global
+      subscription = centrifuge.newSubscription(CHANNEL);
+
+      subscription.on('publication', function(ctx) {
+        
+        addMessage("📢 New message on " + CHANNEL + ":", ctx.data);
+        console.log("New publication:", ctx);
+        
+      });
+
+      subscription.on('subscribed', function(ctx) {
+        addMessage("✅ Subscribed to channel: " + CHANNEL, ctx);
+      });
+
+      subscription.on('unsubscribed', function(ctx) {
+        addMessage("🚪 Unsubscribed from channel: " + CHANNEL, ctx);
+      });
+
+      subscription.on('error', function(err) {
+        addMessage("⚠️ Subscription error on " + CHANNEL + ":", err);
+      });
+
+      subscription.subscribe();
+      centrifuge.connect();
+    }
+
+    function disconnect() {
+      if (!centrifuge) {
+        addMessage("⚠️ Not connected.");
+        return;
+      }
+      addMessage("👋 Disconnecting...");
+      if (subscription) {
+        subscription.unsubscribe();
+        subscription = null;
+      }
+      centrifuge.disconnect();
+      centrifuge = null;
+      statusText.textContent = "DISCONNECTED";
+    }
+
+    btnConnect.addEventListener("click", connect);
+    btnDisconnect.addEventListener("click", disconnect);
+
+    // ถ้าอยากให้ auto-connect ตอนโหลดหน้า ให้ uncomment บรรทัดนี้:
+    // connect();
+  </script>
+</body>
+</html>
