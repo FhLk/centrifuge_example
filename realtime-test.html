@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8" />
   <title>Centrifugo Realtime Notification Test</title>
@@ -9,9 +10,11 @@
       margin: 20px;
       background: #f5f5f5;
     }
+
     h1 {
       font-size: 20px;
     }
+
     .status {
       padding: 10px;
       margin-bottom: 10px;
@@ -19,9 +22,11 @@
       background: #fff;
       border: 1px solid #ddd;
     }
+
     .status span {
       font-weight: bold;
     }
+
     #messages {
       margin-top: 10px;
       padding: 10px;
@@ -32,30 +37,36 @@
       overflow-y: auto;
       font-size: 14px;
     }
+
     .msg-item {
       padding: 6px 8px;
       margin-bottom: 6px;
       border-radius: 4px;
       background: #eaf4ff;
     }
+
     .msg-time {
       font-size: 11px;
       color: #666;
     }
+
     .msg-data {
       margin-top: 2px;
       white-space: pre-wrap;
       word-break: break-all;
     }
+
     .controls {
       margin-bottom: 10px;
     }
+
     button {
       padding: 6px 12px;
       cursor: pointer;
     }
   </style>
 </head>
+
 <body>
 
   <h1>🔔 Centrifugo Realtime Notification Test</h1>
@@ -67,7 +78,7 @@
 
   <div class="status">
     สถานะการเชื่อมต่อ: <span id="statusText">DISCONNECTED</span><br />
-    Channel ที่ subscribe: <code>announcement:global</code>
+    Channel ที่ subscribe: <code>announcement</code>
   </div>
 
   <div id="messages">
@@ -75,12 +86,15 @@
   </div>
 
   <!-- JS client ของ Centrifugo จาก CDN -->
-  <script src="https://unpkg.com/centrifuge@<version>/dist/centrifuge.js"></script>
+  <script src="https://unpkg.com/centrifuge@5.0.0/dist/centrifuge.js"></script>
 
   <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchListNoti()
+    })
     // URL ของ Centrifugo (ตาม config ปัจจุบันของคุณ)
-    const WS_URL = "ws://<domain_name>:30850/connection/websocket";
-    const CHANNEL = "<channel_name>";
+    const WS_URL = "wss://uat-emsplus.niems.go.th/centrifugo/connection/websocket";
+    const CHANNEL = "announcement";
 
     let centrifuge = null;
     let subscription = null;
@@ -89,6 +103,39 @@
     const messagesDiv = document.getElementById("messages");
     const btnConnect = document.getElementById("btnConnect");
     const btnDisconnect = document.getElementById("btnDisconnect");
+
+    // const fetchListNoti = async () => {
+    //   const url = "https://uat-emsplus.niems.go.th/manage/api/v1/notifications/user?limit=5&offset=0";
+
+    //   try {
+    //     const response = await fetch(url, {
+    //       method: "Get",
+    //       headers: {
+    //         "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXB0X2lkIjoiMDYxMDg0MTAiLCJlbXMiOiJFTVMtNTQzMS0zNDI3MzIiLCJlbnYiOiJ1YXQiLCJleHAiOjE3NjYxMzExMDIsIm9uZV9pZCI6IjU1NDY1NDQxNzg2OTE3ODciLCJyZWZfaWQiOiIyYjYzNmI1ZS04OWZhLTRmYmEtOGJkYy02MmI1M2VhMzBlMmQiLCJyb2xlX2lkIjoiNjQ1NzIzMDgiLCJzdWIiOiJlbXAtRU1TLTU0MzEtMzQyNzMyIiwidHlwZSI6ImFjY2VzcyJ9.7xZTQk0CtdbCM7oukQ48jhB0BznOFJSWSpGCDtaYerU",
+    //         "Content-Type": "application/json"
+    //       }
+    //     });
+
+    //     if (!response.ok) {
+    //       throw new Error(`Response status: ${response.status}`);
+    //     }
+
+    //     const result = await response.json();
+    //     console.log(result);
+
+    //     // สมมติ result.data เป็น list notification
+    //     for (let i = result.data.length - 1; i >= 0; i--) {
+    //       const noti = result.data[i]
+    //       addMessage(noti.title, noti)
+    //     }
+
+    //   } catch (error) {
+    //     console.error(error);
+    //     addMessage("❌ fetch notifications failed", error.message)
+    //   }
+    // };
+
+
 
     function addMessage(text, data) {
       const item = document.createElement("div");
@@ -121,18 +168,18 @@
       addMessage("🚀 Connecting to " + WS_URL);
 
       centrifuge = new Centrifuge(WS_URL, {
-      token : "<access_token>"
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXB0X2lkIjoiMDYxMDg0MTAiLCJlbXMiOiJFTVMtNTQzMS0zNDI3MzIiLCJlbnYiOiJ1YXQiLCJleHAiOjE3NjYxMzExMDIsIm9uZV9pZCI6IjU1NDY1NDQxNzg2OTE3ODciLCJyZWZfaWQiOiIyYjYzNmI1ZS04OWZhLTRmYmEtOGJkYy02MmI1M2VhMzBlMmQiLCJyb2xlX2lkIjoiNjQ1NzIzMDgiLCJzdWIiOiJlbXAtRU1TLTU0MzEtMzQyNzMyIiwidHlwZSI6ImFjY2VzcyJ9.7xZTQk0CtdbCM7oukQ48jhB0BznOFJSWSpGCDtaYerU"
       });
 
       // Event: เมื่อเชื่อมต่อสำเร็จ
-      centrifuge.on('connected', function(ctx) {
+      centrifuge.on('connected', function (ctx) {
         console.log("wow");
         statusText.textContent = "CONNECTED (clientID=" + ctx.client + ")";
         addMessage("✅ Connected", ctx);
       });
 
       // Event: เมื่อหลุดการเชื่อมต่อ
-      centrifuge.on('disconnect', function(ctx) {
+      centrifuge.on('disconnect', function (ctx) {
         statusText.textContent = "DISCONNECTED (" + ctx.reason + ")";
         addMessage("❌ Disconnected", ctx);
       });
@@ -140,22 +187,22 @@
       // subscribe channel announcement:global
       subscription = centrifuge.newSubscription(CHANNEL);
 
-      subscription.on('publication', function(ctx) {
-        
+      subscription.on('publication', function (ctx) {
+
         addMessage("📢 New message on " + CHANNEL + ":", ctx.data);
         console.log("New publication:", ctx);
-        
+
       });
 
-      subscription.on('subscribed', function(ctx) {
+      subscription.on('subscribed', function (ctx) {
         addMessage("✅ Subscribed to channel: " + CHANNEL, ctx);
       });
 
-      subscription.on('unsubscribed', function(ctx) {
+      subscription.on('unsubscribed', function (ctx) {
         addMessage("🚪 Unsubscribed from channel: " + CHANNEL, ctx);
       });
 
-      subscription.on('error', function(err) {
+      subscription.on('error', function (err) {
         addMessage("⚠️ Subscription error on " + CHANNEL + ":", err);
       });
 
@@ -173,7 +220,12 @@
         subscription.unsubscribe();
         subscription = null;
       }
+
       centrifuge.disconnect();
+
+      centrifuge.on('disconnected', function (ctx) {
+        console.log("❌ disconnected", ctx);
+      });
       centrifuge = null;
       statusText.textContent = "DISCONNECTED";
     }
@@ -185,4 +237,5 @@
     // connect();
   </script>
 </body>
+
 </html>
